@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F4C45">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>خاندانی ڈائری</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--g:#0F4C45;--g2:#17695f;--gold:#E0A526;--bg:#F1F5F4;--card:#fff;--tx:#14231f;--mu:#5d716c;--ln:#dbe5e2;--red:#B3382C}
+*{box-sizing:border-box;margin:0}
+body{font-family:'Noto Naskh Arabic','Noto Nastaliq Urdu','Jameel Noori Nastaleeq',Tahoma,sans-serif;background:var(--bg);color:var(--tx);line-height:1.9;padding-bottom:90px}
+header{background:var(--g);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 18px) 18px 22px;border-radius:0 0 28px 28px}
+h1{font-family:'Noto Nastaliq Urdu','Noto Naskh Arabic',serif;font-size:1.7rem;line-height:2.2}
+.sub{opacity:.8;font-size:.95rem}
+.search{margin:-18px 16px 0;position:relative}
+.search input{width:100%;padding:12px 18px;border-radius:16px;border:1px solid var(--ln);font:inherit;background:#fff;box-shadow:0 4px 14px rgba(15,76,69,.12)}
+.list{padding:16px;display:grid;gap:12px}
+.m{background:var(--card);border-radius:16px;border-inline-start:6px solid var(--gold);padding:12px 14px;cursor:pointer}
+.m .top{display:flex;align-items:center;gap:12px}
+.av{width:46px;height:46px;border-radius:50%;background:var(--g2);color:#fff;display:grid;place-items:center;font-weight:700;font-size:1.2rem;flex:none}
+.nm{font-weight:700;font-size:1.1rem}.rl{color:var(--mu);font-size:.9rem}
+.det{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--ln);font-size:.95rem}
+.m.open .det{display:block}
+.det p{display:flex;justify-content:space-between;gap:10px;padding:2px 0}.det b{color:var(--mu);font-weight:400}.det span{direction:ltr;text-align:left}
+.acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:8px 14px;font:inherit;cursor:pointer;background:var(--g);color:#fff;text-decoration:none;font-size:.9rem}
+.btn.o{background:#e6efed;color:var(--g)}.btn.r{background:#f6e3e0;color:var(--red)}
+.empty{text-align:center;color:var(--mu);padding:50px 20px}
+.fab{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);left:18px;background:var(--gold);color:#2b2000;border:0;border-radius:30px;padding:14px 22px;font:inherit;font-weight:700;box-shadow:0 8px 20px rgba(0,0,0,.25);cursor:pointer}
+.bar{display:flex;gap:8px;padding:0 16px;margin-top:14px}
+dialog{border:0;border-radius:22px;width:min(94vw,460px);padding:0;margin:auto}
+dialog::backdrop{background:rgba(10,30,26,.55)}
+form{padding:20px;display:grid;gap:10px}
+form h2{font-size:1.25rem;color:var(--g)}
+label{font-size:.9rem;color:var(--mu)}
+input,select{width:100%;padding:10px 12px;border:1px solid var(--ln);border-radius:12px;font:inherit;background:#fafcfb}
+input:focus,select:focus{outline:2px solid var(--gold);border-color:transparent}
+.ltr{direction:ltr;text-align:right}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--g);color:#fff;padding:10px 20px;border-radius:20px;display:none;z-index:9}
+header{display:flex;justify-content:space-between;align-items:flex-start}
+.hb{display:flex;gap:8px;margin-top:10px}.hb button{background:rgba(255,255,255,.16);color:#fff;border:0;border-radius:12px;padding:6px 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.note{margin:14px 16px 0;background:#fff6dc;border:1px solid #ecd48a;border-radius:14px;padding:10px 14px;font-size:.92rem;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.lock{position:fixed;inset:0;background:var(--g);color:#fff;z-index:20;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px;text-align:center}
+.lock input{max-width:220px;text-align:center;font-size:1.6rem;letter-spacing:10px;direction:ltr}
+.lock a{color:#f3d98b;font-size:.9rem;cursor:pointer;text-decoration:underline}
+.err{color:#ffd0ca;min-height:1.6em;font-size:.95rem}
+</style>
+</head>
+<body>
+<header>
+<div><h1>خاندانی ڈائری</h1>
+<div class="sub" id="count">کل افراد: ۰</div></div>
+<div class="hb"><button id="lk">🔒 لاک</button><button id="st">⚙ ترتیبات</button></div>
+</header>
+<div id="notes"></div>
+<div class="search"><input id="q" placeholder="نام، نمبر یا شناختی کارڈ سے تلاش کریں…"></div>
+<div class="bar">
+<button class="btn o" id="exp">بیک اپ محفوظ</button>
+<button class="btn o" id="shr">بیک اپ بھیجیں</button>
+<button class="btn o" id="imp">بیک اپ بحال کریں</button>
+<input type="file" id="file" accept=".json" hidden>
+</div>
+<div class="list" id="list"></div>
+<button class="fab" id="add">+ نیا فرد شامل کریں</button>
+
+<dialog id="dlg">
+<form id="f" method="dialog" autocomplete="off">
+<h2 id="ft">نیا فرد</h2>
+<div><label>پورا نام *</label><input id="name" required></div>
+<div><label>رشتہ</label>
+<select id="rel"><option>والد</option><option>والدہ</option><option>بھائی</option><option>بہن</option><option>بیٹا</option><option>بیٹی</option><option>شوہر</option><option>بیوی</option><option>دادا</option><option>دادی</option><option>نانا</option><option>نانی</option><option>چچا</option><option>پھوپھی</option><option>ماموں</option><option>خالہ</option><option>کزن</option><option>دیگر</option></select></div>
+<div><label>موبائل نمبر</label><input id="ph" class="ltr" inputmode="tel" placeholder="03XX-XXXXXXX"></div>
+<div><label>شناختی کارڈ نمبر</label><input id="cn" class="ltr" inputmode="numeric" placeholder="XXXXX-XXXXXXX-X" maxlength="15"></div>
+<div><label>تاریخِ پیدائش</label><input id="dob" type="date" class="ltr"></div>
+<div><label>پتہ</label><input id="ad"></div>
+<div class="row"><button type="button" class="btn" id="save">محفوظ کریں</button><button type="button" class="btn o" id="cancel">منسوخ</button></div>
+</form>
+</dialog>
+<dialog id="sd"><form method="dialog" onsubmit="return false">
+<h2>حفاظت (PIN)</h2>
+<div><label>نیا PIN (۴ ہندسے)</label><input id="p1" class="ltr" type="password" inputmode="numeric" maxlength="4"></div>
+<div><label>PIN دوبارہ لکھیں</label><input id="p2" class="ltr" type="password" inputmode="numeric" maxlength="4"></div>
+<div class="row"><button type="button" class="btn" id="psave">PIN لگائیں</button><button type="button" class="btn r" id="prem">PIN ہٹائیں</button></div>
+<button type="button" class="btn o" id="sclose">بند کریں</button>
+</form></dialog>
+<div class="lock" id="lock"><h1>خاندانی ڈائری</h1><div>اپنا PIN لکھیں</div>
+<input id="lp" type="password" inputmode="numeric" maxlength="4" autocomplete="off">
+<div class="err" id="le"></div><button class="btn" id="lgo" style="background:var(--gold);color:#2b2000;font-weight:700;padding:10px 34px">کھولیں</button>
+<a id="lf">PIN بھول گئے؟</a></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='khandani_diary_v1';
+let data=[],editId=null;
+const $=id=>document.getElementById(id);
+try{data=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){data=[]}
+const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){toast('محفوظ نہیں ہو سکا')}};
+function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',2200)}
+const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const digitsUr=n=>String(n).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
+function age(d){if(!d)return'';const b=new Date(d),n=new Date();let a=n.getFullYear()-b.getFullYear();if(n<new Date(n.getFullYear(),b.getMonth(),b.getDate()))a--;return a>=0?digitsUr(a)+' سال':''}
+function render(){
+ const q=$('q').value.trim().toLowerCase();
+ const L=data.filter(m=>!q||[m.name,m.ph,m.cn,m.rel,m.ad].join(' ').toLowerCase().includes(q));
+ $('count').textContent='کل افراد: '+digitsUr(data.length);
+ $('list').innerHTML=L.length?L.map(m=>`<div class="m" data-id="${m.id}"><div class="top"><div class="av">${esc(m.name.trim()[0]||'؟')}</div><div><div class="nm">${esc(m.name)}</div><div class="rl">${esc(m.rel)}${m.dob?' · '+age(m.dob):''}</div></div></div>
+ <div class="det"><p><b>موبائل</b><span>${esc(m.ph)||'—'}</span></p><p><b>شناختی کارڈ</b><span>${esc(m.cn)||'—'}</span></p><p><b>تاریخِ پیدائش</b><span>${esc(m.dob)||'—'}</span></p><p><b>پتہ</b><em style="font-style:normal">${esc(m.ad)||'—'}</em></p>
+ <div class="acts">${m.ph?`<a class="btn" href="tel:${esc(m.ph.replace(/[^\d+]/g,''))}">کال</a>`:''}<button class="btn o" data-e="${m.id}">ترمیم</button><button class="btn r" data-d="${m.id}">حذف</button></div></div></div>`).join('')
+ :`<div class="empty">${data.length?'کوئی نتیجہ نہیں ملا۔':'ابھی کوئی فرد شامل نہیں۔<br>نیچے "نیا فرد شامل کریں" دبائیں۔'}</div>`;
+}
+$('list').onclick=e=>{
+ const ed=e.target.closest('[data-e]'),de=e.target.closest('[data-d]');
+ if(ed){openForm(ed.dataset.e);return}
+ if(de){if(confirm('کیا آپ واقعی اس فرد کو حذف کرنا چاہتے ہیں؟')){data=data.filter(m=>m.id!==de.dataset.d);persist();render();toast('حذف ہو گیا')}return}
+ if(e.target.closest('a'))return;
+ const c=e.target.closest('.m');if(c)c.classList.toggle('open');
+};
+function openForm(id){
+ editId=id||null;const m=data.find(x=>x.id===id)||{};
+ $('ft').textContent=id?'معلومات میں ترمیم':'نیا فرد';
+ $('name').value=m.name||'';$('rel').value=m.rel||'دیگر';$('ph').value=m.ph||'';$('cn').value=m.cn||'';$('dob').value=m.dob||'';$('ad').value=m.ad||'';
+ $('dlg').showModal();
+}
+$('add').onclick=()=>openForm();
+$('cancel').onclick=()=>$('dlg').close();
+$('cn').oninput=e=>{let v=e.target.value.replace(/\D/g,'').slice(0,13);if(v.length>12)v=v.slice(0,5)+'-'+v.slice(5,12)+'-'+v.slice(12);else if(v.length>5)v=v.slice(0,5)+'-'+v.slice(5);e.target.value=v};
+$('save').onclick=()=>{
+ const name=$('name').value.trim();if(!name){toast('نام لکھنا ضروری ہے');return}
+ const rec={id:editId||Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,rel:$('rel').value,ph:$('ph').value.trim(),cn:$('cn').value.trim(),dob:$('dob').value,ad:$('ad').value.trim()};
+ if(editId)data=data.map(m=>m.id===editId?rec:m);else data.push(rec);
+ persist();$('dlg').close();render();notes();toast('محفوظ ہو گیا');
+};
+$('q').oninput=render;
+const BK='khandani_lastbackup_v1',PK='khandani_pin_v1';
+const bfile=()=>new File([JSON.stringify(data,null,1)],'khandani-diary-backup.json',{type:'application/json'});
+const markBk=()=>{try{localStorage.setItem(BK,String(Date.now()))}catch(e){}notes()};
+$('exp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(bfile());a.download='khandani-diary-backup.json';a.click();markBk();toast('بیک اپ تیار ہے')};
+$('shr').onclick=async()=>{const f=bfile();try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'خاندانی ڈائری بیک اپ'});markBk()}else{$('exp').click();toast('شیئر دستیاب نہیں، فائل ڈاؤن لوڈ ہو گئی')}}catch(e){}};
+async function hs(x){try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('kd:'+x));return[...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,'0')).join('')}catch(e){let h=0;for(const c of 'kd:'+x)h=(h*31+c.charCodeAt(0))|0;return'f'+h}}
+const hasPin=()=>!!localStorage.getItem(PK);
+function notes(){
+ const n=[],lb=+localStorage.getItem(BK)||0,d=Math.floor((Date.now()-lb)/864e5);
+ if(data.length&&(!lb||d>=7))n.push(`<div class="note"><span>${lb?'آخری بیک اپ کو '+digitsUr(d)+' دن ہو گئے۔':'ابھی تک بیک اپ نہیں لیا۔'}</span><button class="btn" onclick="$('shr').click()">بھیجیں</button></div>`);
+ if(!hasPin())n.push(`<div class="note"><span>حفاظت کے لیے PIN لگائیں۔</span><button class="btn" onclick="openSet()">PIN لگائیں</button></div>`);
+ $('notes').innerHTML=n.join('');
+}
+function lockNow(){if(!hasPin())return;$('list').innerHTML='';$('notes').innerHTML='';$('count').textContent='';$('lp').value='';$('le').textContent='';$('lock').style.display='flex'}
+async function tryUnlock(){
+ if(await hs($('lp').value)===localStorage.getItem(PK)){$('lock').style.display='none';render();notes()}
+ else{$('le').textContent='PIN غلط ہے';$('lp').value=''}
+}
+$('lgo').onclick=tryUnlock;$('lp').onkeydown=e=>{if(e.key==='Enter')tryUnlock()};
+$('lp').oninput=e=>{e.target.value=e.target.value.replace(/\D/g,'');if(e.target.value.length===4)tryUnlock()};
+$('lf').onclick=()=>{if(confirm('PIN بھولنے پر صرف یہ ہو سکتا ہے کہ ایپ کا تمام ڈیٹا مٹا کر بیک اپ فائل سے بحال کیا جائے۔ کیا ڈیٹا مٹا دیں؟')){data=[];persist();localStorage.removeItem(PK);$('lock').style.display='none';render();notes();toast('ڈیٹا مٹ گیا۔ اب بیک اپ بحال کریں')}};
+function openSet(){$('p1').value='';$('p2').value='';$('sd').showModal()}
+$('st').onclick=openSet;$('sclose').onclick=()=>$('sd').close();
+$('lk').onclick=()=>{if(hasPin())lockNow();else{toast('پہلے PIN لگائیں');openSet()}};
+$('psave').onclick=async()=>{const a=$('p1').value,b=$('p2').value;if(!/^\d{4}$/.test(a)){toast('PIN چار ہندسوں کا ہو');return}if(a!==b){toast('دونوں PIN ایک جیسے نہیں');return}localStorage.setItem(PK,await hs(a));$('sd').close();notes();toast('PIN لگ گیا')};
+$('prem').onclick=()=>{if(hasPin()&&confirm('کیا PIN ہٹا دیں؟')){localStorage.removeItem(PK);$('sd').close();notes();toast('PIN ہٹ گیا')}};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)lockNow()});
+$('imp').onclick=()=>$('file').click();
+$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d))throw 0;if(confirm('موجودہ ڈیٹا کی جگہ بیک اپ کا ڈیٹا آ جائے گا۔ جاری رکھیں؟')){data=d;persist();render();notes();toast('بحال ہو گیا')}}catch(x){toast('فائل درست نہیں ہے')}};r.readAsText(f);e.target.value=''};
+if(hasPin())lockNow();else{render();notes()}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
